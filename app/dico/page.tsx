@@ -6,17 +6,24 @@ import Link from 'next/link';
 export default function DicoPage() {
   const [words, setWords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function loadWords() {
-      const { data } = await supabase.from('vocabulary').select('*').limit(50);
-      setWords(data || []);
+      try {
+        const { data, error } = await supabase.from('vocabulary').select('*').limit(10);
+        if (error) setError(error.message);
+        else setWords(data || []);
+      } catch (e: any) {
+        setError(e.message);
+      }
       setLoading(false);
     }
     loadWords();
   }, []);
 
-  if (loading) return <div className="p-8 text-center text-white">Chargement...</div>;
+  if (loading) return <div className="p-8 text-white">Chargement...</div>;
+  if (error) return <div className="p-8 text-red-400">Erreur: {error}</div>;
 
   return (
     <main className="min-h-screen bg-[#0a0a0f] p-4">
@@ -30,6 +37,7 @@ export default function DicoPage() {
           </div>
         ))}
       </div>
+      {words.length === 0 && <p className="text-gray-400">Aucun mot trouvé</p>}
     </main>
   );
 }
